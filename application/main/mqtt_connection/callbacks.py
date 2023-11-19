@@ -1,9 +1,10 @@
 from datetime import datetime
 from application.configs.broker_configs import mqtt_broker_configs
-from application.configs.mongo import db
+from application.configs.mongo import conectar_mongo
 
 
 def enviar_para_banco(dic):
+    db = conectar_mongo()
     try:
         db.mqtt.insert_one(dic)
     except Exception as e:
