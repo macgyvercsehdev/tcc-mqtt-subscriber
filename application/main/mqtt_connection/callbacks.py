@@ -1,6 +1,6 @@
-from datetime import datetime, timedelta
 from application.configs.broker_configs import mqtt_broker_configs
 from application.configs.mongo import conectar_mongo
+from datetime import datetime, timedelta
 
 
 def enviar_para_banco(dic):
@@ -14,9 +14,11 @@ def consumo_diario(dia_atual):
     db = conectar_mongo()
     
     dia_anterior = datetime.strptime(dia_atual, "%Y-%m-%d %H:%M:%S") - timedelta(days=1)
-    
-    dia_anterior = datetime(dia_anterior.year, dia_anterior.month, dia_anterior.day, 0, 0, 0)
-    
+    dia_atual = datetime.strptime(dia_atual, "%Y-%m-%d %H:%M:%S")
+
+    dia_atual = datetime(dia_atual.year, dia_atual.month, dia_atual.day, dia_atual.hour, dia_atual.minute, dia_atual.second)
+    dia_anterior = datetime(dia_anterior.year, dia_anterior.month, dia_anterior.day)
+
     response = list(db.mqtt.aggregate([
         {
             '$match': {
@@ -76,14 +78,18 @@ def on_message(client, userdata, msg):
         "temperatura": float(payload[1]),
         "data": datetime.strptime(payload[2], "%Y-%m-%d %H:%M:%S"),
         "dia_da_semana": payload[3],
-        "vazao_litro_acumulada": float(payload[5]),
+        "vazao_litro_acumulada": float(payload[4]),
     }
 
     res = consumo_diario(dic["data"].strftime("%Y-%m-%d %H:%M:%S"))
+    consumo = 0
 
-    dic["consumo_diario"] = res[0]["vazao_litro_acumulada"]
+    if not res:
+        consumo = 0
+    else:
+        consumo = res[0]["vazao_litro_acumulada"]
 
-    print(dic)
-    
+    dic["consumo_diario"] = abs(consumo - dic["vazao_litro_acumulada"])
+
     # TODO: Enviar o dicionário para o servidor de banco de dados
     enviar_para_banco(dic)

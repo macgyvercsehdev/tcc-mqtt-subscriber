@@ -9,7 +9,7 @@ mqtt_client = mqtt.Client('publisher-py')
 lista = []
 dia_da_semana = ["segunda", "terça", "quarta", "quinta", "sexta", "sábado", "domingo"]
 
-for dia in range(300):
+for dia in range(10):
     id_equipamento = '00:00:00:00:00:00'
     temperatura = round(random.uniform(20, 35), 1)
     data = datetime.strptime("2023-11-18 00:00:00", "%Y-%m-%d %H:%M:%S") + timedelta(days=dia)
