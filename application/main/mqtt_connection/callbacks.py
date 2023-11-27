@@ -70,16 +70,24 @@ def on_subscribe(client, userdata, mid, granted_qos):
 
 def on_message(client, userdata, msg):
     print(msg.topic + " " + str(msg.payload))
-
+    data = None
     payload = msg.payload.decode().split(";")
+    try:
+        data = datetime.strptime(payload[2], "%d/%m/%Y %H:%M:%S")
+    except:
+        data = None
 
     dic = {
         "id_equipamento": payload[0],
         "temperatura": float(payload[1]),
-        "data": datetime.strptime(payload[2], "%Y-%m-%d %H:%M:%S"),
+        "data": data,
         "dia_da_semana": payload[3],
         "vazao_litro_acumulada": float(payload[4]),
     }
+    if not data:
+        print(dic)
+        enviar_para_banco(dic)
+        return
 
     res = consumo_diario(dic["data"].strftime("%Y-%m-%d %H:%M:%S"))
     consumo = 0
@@ -90,6 +98,6 @@ def on_message(client, userdata, msg):
         consumo = res[0]["vazao_litro_acumulada"]
 
     dic["consumo_diario"] = abs(consumo - dic["vazao_litro_acumulada"])
-
+    print(dic)
     # TODO: Enviar o dicionário para o servidor de banco de dados
     enviar_para_banco(dic)
