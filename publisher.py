@@ -9,13 +9,13 @@ mqtt_client = mqtt.Client('publisher-py')
 lista = []
 dia_da_semana = ["segunda", "terça", "quarta", "quinta", "sexta", "sábado", "domingo"]
 
-for dia in range(1):
-    id_equipamento = '00:00:00:00:00:00'
+for dia in range(10):
+    id_equipamento = 'simulador'
     temperatura = round(random.uniform(20, 35), 1)
     umidade = round(random.uniform(20, 35), 1)
-    data = datetime.strptime("2023-11-18 00:00:00", "%Y-%m-%d %H:%M:%S") + timedelta(days=dia)
-    vazao_litro_acumulada = random.uniform(0, 90)
-
+    data = datetime.strptime("9/11/2023 22:50:00", "%d/%m/%Y %H:%M:%S") + timedelta(minutes=dia)
+    vazao_litro_acumulada = round(random.uniform(20, 35), 1)
+    data = data.strftime("%d/%m/%Y %H:%M:%S")
     dados = f'{id_equipamento};{temperatura};{umidade};{data};{dia_da_semana[random.randint(0, 6)]};{vazao_litro_acumulada}'
     lista.append(dados)
 

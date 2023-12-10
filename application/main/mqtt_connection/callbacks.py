@@ -1,5 +1,9 @@
-from application.repository.pipeline_repository import pipeline_repository
+from application.repository.tarifa_repository import calcular_agua_esgoto
 from application.configs.broker_configs import mqtt_broker_configs
+from application.repository.pipeline_repository import (
+    pipeline_repository,
+    pipeline_mensal_repository
+)
 from application.configs.mongo import conectar_mongo
 from datetime import datetime, timedelta
 from typing import List
@@ -24,9 +28,41 @@ def enviar_para_banco(dic):
     except Exception as e:
         print(e)  # Imprimir a mensagem de erro
 
-def consumo_diario(dia_atual: str) -> List[dict]:
+def consumo_mensal(dia_mes_atual: str) -> List[dict]:
     """
     Recupera dados de consumo diário do MongoDB com base na data fornecida.
+
+    Args:
+        dia_mes_atual (str): A data atual no formato "%Y-%m-%d %H:%M:%S".
+
+    Returns:
+        List[dict]: Uma lista de dados de consumo recuperados do MongoDB.
+    """
+    
+    # Conectar ao MongoDB
+    db = conectar_mongo()
+
+    # Converter a string da data atual para objeto datetime
+    dia_mes_atual = datetime.strptime(dia_mes_atual, "%Y-%m-%d %H:%M:%S")
+
+    # Calcular o dia anterior
+    dia_mes_anterior = dia_mes_atual - timedelta(days=30)
+
+    # Obter apenas a parte da data do dia anterior
+    dia_mes_anterior = datetime(dia_mes_anterior.year, dia_mes_anterior.month, dia_mes_anterior.day)
+
+    # Criar o pipeline para a agregação do MongoDB
+    pipeline = pipeline_mensal_repository(dia_mes_anterior)
+
+    # Executar consulta de agregação no MongoDB
+    response = list(db.mqtt.aggregate(pipeline))
+
+    return response
+
+
+def consumo_diario(dia_atual: str) -> List[dict]:
+    """
+    Recupera dados de consumo mensal do MongoDB com base na data fornecida.
 
     Args:
         dia_atual (str): A data atual no formato "%Y-%m-%d %H:%M:%S".
@@ -144,6 +180,22 @@ def on_message(client, userdata, msg):
         consumo = res[0]["vazao_litro_acumulada"]
 
     dic["consumo_diario"] = abs(consumo - dic["vazao_litro_acumulada"])
+
+    # Obter o consumo mensal para a data fornecida
+    res_mensal = consumo_mensal(dic["data"].strftime("%Y-%m-%d %H:%M:%S"))
+
+    # Calcular a diferença entre o fluxo acumulado atual e anterior
+    consumo = 0
+    tarifa = 0
+    if not res_mensal:
+        consumo = 0
+    else:
+        consumo = res_mensal[0]["vazao_litro_acumulada"]
+
+    tarifa = calcular_agua_esgoto(consumo, dic["vazao_litro_acumulada"])
+    
+    dic["consumo_mensal"] = consumo
+    dic["tarifa"] = tarifa
 
     # Imprimir o dicionário e enviá-lo para o banco de dados
     print(dic)
