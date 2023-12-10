@@ -143,6 +143,10 @@ def on_message(client, userdata, msg):
     # Imprimir o tópico e o conteúdo da mensagem
     print(msg.topic + " " + str(msg.payload))
 
+    if not msg.payload:
+        print("Payload vazio")
+        return 
+
     # Dividir o conteúdo em uma lista de valores
     payload = msg.payload.decode().split(";")
 
