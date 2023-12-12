@@ -28,7 +28,7 @@ def enviar_para_banco(dic):
     except Exception as e:
         print(e)  # Imprimir a mensagem de erro
 
-def consumo_mensal(dia_mes_atual: str) -> List[dict]:
+def consumo_30_dias(dia_mes_atual: str) -> List[dict]:
     """
     Recupera dados de consumo diário do MongoDB com base na data fornecida.
 
@@ -183,10 +183,10 @@ def on_message(client, userdata, msg):
     else:
         consumo = res[0]["vazao_litro_acumulada"]
 
-    dic["consumo_diario"] = abs(consumo - dic["vazao_litro_acumulada"])
+    dic["consumo_diario"] = abs(dic["vazao_litro_acumulada"] - consumo)
 
     # Obter o consumo mensal para a data fornecida
-    res_mensal = consumo_mensal(dic["data"].strftime("%Y-%m-%d %H:%M:%S"))
+    res_mensal = consumo_30_dias(dic["data"].strftime("%Y-%m-%d %H:%M:%S"))
 
     # Calcular a diferença entre o fluxo acumulado atual e anterior
     consumo = 0
@@ -196,9 +196,9 @@ def on_message(client, userdata, msg):
     else:
         consumo = res_mensal[0]["vazao_litro_acumulada"]
 
-    tarifa = calcular_agua_esgoto(consumo, dic["vazao_litro_acumulada"])
+    tarifa, consumo_mensal = calcular_agua_esgoto(consumo, dic["vazao_litro_acumulada"])
     
-    dic["consumo_mensal"] = consumo
+    dic["consumo_mensal"] = consumo_mensal
     dic["tarifa"] = tarifa
 
     # Imprimir o dicionário e enviá-lo para o banco de dados

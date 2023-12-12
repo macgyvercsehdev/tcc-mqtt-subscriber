@@ -1,4 +1,4 @@
-def calcular_agua_esgoto(consumo_mensal, vazao_litro_acumulada):
+def calcular_agua_esgoto(consumo_30_dias, vazao_litro_acumulada):
     """
     Calcula o valor da conta de água e esgoto com base no consumo mensal e na vazão acumulada.
 
@@ -16,10 +16,10 @@ def calcular_agua_esgoto(consumo_mensal, vazao_litro_acumulada):
     valorPagar = 0
     valorFaixa = 0
 
-    if consumo_mensal > vazao_litro_acumulada:
+    if consumo_30_dias > vazao_litro_acumulada:
         consumo_mensal = vazao_litro_acumulada / 1000
     else:
-        consumo_mensal = (vazao_litro_acumulada - consumo_mensal) / 1000
+        consumo_mensal = (vazao_litro_acumulada - consumo_30_dias) / 1000
 
     if consumo_mensal <= 10:
         valorPagar = tarifaMinima
@@ -35,4 +35,4 @@ def calcular_agua_esgoto(consumo_mensal, vazao_litro_acumulada):
 
     valor = valorPagar * 2
 
-    return valor
+    return valor, consumo_mensal

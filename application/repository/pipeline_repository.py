@@ -12,7 +12,7 @@ def pipeline_repository(dia_anterior, dia_atual):
             }
         }, {
             '$sort': {
-                'data': -1
+                'data': 1
             }
         }, {
             '$group': {
